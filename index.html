@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quick Count</title>
+  </head>
+  <body>
+		<div id="container" style="display: flex; justify-content: center;">
+			<canvas id="leftCanvas" width="320" height="320" style="margin-right: 0px; margin-bottom: 10px;border:1px solid #ffffff;">
+			</canvas>
+		</div>
+			<br>
+			<div style="display: flex; justify-content: center;">
+			<progress id="timer" value="90" max="90" style="width: 320px;"></progress>
+			</div>
+			<br>
+		<br>
+		<br>
+left arrow = 15 <br>
+right arrow = 16 <br> 
+<br>
+right answer is score plus 1, wrong - minus 1
+
+    <script>
+		
+var minCircles = 15;
+var maxtime = 90;
+
+var maxRad = 10;
+var sc = 1.25;
+
+var leftCanvas = document.getElementById("leftCanvas");
+var leftCtx = leftCanvas.getContext("2d");
+
+
+var isLocked = false;
+var score = 0;
+var rightAnswer = true;
+
+
+document.onkeydown = document.onkeyup = function(e) {
+	if (e.target.tagName === 'INPUT') return;
+	if (isLocked) return;
+	//db(e.keyCode)
+	
+	var answer = 0;
+	if (e.type == 'keydown' && (e.keyCode == 37)) {
+		answer = minCircles;
+		rightAnswer = circles.length == answer;
+		score += rightAnswer ? 1 : -1
+		createNewCircles()
+	} else if (e.type == 'keydown' && (e.keyCode == 39)) {
+		answer = minCircles + 1;
+		rightAnswer = circles.length == answer;
+		score += rightAnswer ? 1 : -1
+		createNewCircles()
+	}
+}
+
+
+// Circle object
+function Circle(x, y, r, color) {
+	this.x = x;
+	this.y = y;
+	this.r = r;
+	this.color = color;
+	this.draw = function(ctx) {
+		ctx.beginPath();
+		ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
+		ctx.fillStyle = this.color;
+		ctx.fill();
+		ctx.strokeStyle = "gray";
+		ctx.stroke();
+	};
+}
+
+var circles = [];
+
+// Function to check if two circles overlap
+function doCirclesOverlap(circle1, circle2) {
+	var dx = circle1.x - circle2.x;
+	var dy = circle1.y - circle2.y;
+	var distance = Math.sqrt(dx * dx + dy * dy);
+	return distance < circle1.r + circle2.r;
+}
+
+// Function to check if a circle overlaps with any existing circles
+function doesCircleOverlap(circle, circles) {
+	for (var i = 0; i < circles.length; i++) {
+		if (doCirclesOverlap(circle, circles[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+createNewCircles();
+function createNewCircles() {
+	circles.length = 0;
+	var numCircles = minCircles + Math.round(Math.random());
+	
+	leftCtx.clearRect(0, 0, leftCanvas.width, leftCanvas.height)
+	
+	for (var i=0,r=maxRad; i < numCircles; i++) {
+		//var r = (Math.random() + 1) * maxRad/2
+		var x = Math.random() * (leftCanvas.width-r*2) + r;
+		var y = Math.random() * (leftCanvas.height-r*2) + r;
+		var color = rightAnswer ? 'black' : 'red';
+		var circle = new Circle(x, y, r, color);
+		
+		// Keep generating new positions until the circle doesn't overlap with any existing circles
+		for (var u=0; u<999 && doesCircleOverlap(circle, circles); u++){
+			var x = Math.random() * (leftCanvas.width-r*2) + r;
+			var y = Math.random() * (leftCanvas.height-r*2) + r;
+			circle.x = x;
+			circle.y = y;
+		}
+		
+		circles.push(circle);
+		circle.draw(leftCtx);
+	}
+}
+
+
+function showScore() {
+	leftCtx.font = "32px Arial";
+	leftCtx.textAlign = 'center';
+	leftCtx.fillStyle = "darkblue";
+	leftCtx.fillText('\u2588'.repeat(score.toString().length), leftCanvas.width/2, leftCanvas.height/2);
+	leftCtx.fillStyle = 'yellow';
+	leftCtx.fillText(score, leftCanvas.width/2, leftCanvas.height/2);
+	
+}
+
+var timerElement = document.getElementById("timer");
+var timeLeft = maxtime;
+timerElement.max = maxtime
+timerElement.value = timeLeft;
+
+var countdown = setInterval(function() {
+		timeLeft--;
+		timerElement.value = timeLeft;
+		if (timeLeft <= 0) {
+				clearInterval(countdown);
+		}
+}, 1000);
+
+var timeoutID = setTimeout(function() {
+		clearInterval(countdown);
+		showScore();
+		isLocked=true;
+}, maxtime*1000);
+
+    </script>
+  </body>
+</html>
